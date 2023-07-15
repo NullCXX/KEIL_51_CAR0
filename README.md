@@ -1,2 +1,2 @@
 # KEIL_51_CAR0
-This is an ultrasonic remote control car based on AT89C52RC
+An ultrasonic remote control solution for prototype car based AT89C52RC SoC
