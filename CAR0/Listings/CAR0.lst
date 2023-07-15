@@ -1,0 +1,333 @@
+C51 COMPILER V9.54   CAR0                                                                  07/15/2023 16:07:18 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE CAR0
+OBJECT MODULE PLACED IN .\Objects\CAR0.obj
+COMPILER INVOKED BY: E:\Keil_v5\C51\BIN\C51.EXE CAR0.C OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\CAR0
+                    -.lst) TABS(2) OBJECT(.\Objects\CAR0.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2           
+   3          #define uchar unsigned char
+   4          #define uint  unsigned int
+   5           
+   6          sbit LB=P0^0;   //   out2
+   7          sbit LF=P0^1;   //   out1
+   8          sbit RB=P0^2;   //   out4
+   9          sbit RF=P0^3;   //   out3
+  10          sbit DJ = P0^5;
+  11          sbit TRIG=P2^1;
+  12          sbit ECHO=P2^0;
+  13          sbit ENA=P1^0;
+  14          sbit ENB=P1^1;
+  15          int value;
+  16          char counter=1;
+  17          char jiaodu=3,PWMA,PWMB,flag=0; 
+  18          
+  19          void UsartConfiguration()//串口波特率
+  20          {   
+  21   1          SCON=0X50;  //设定串口工作方式
+  22   1          TMOD=0X21;          
+  23   1          PCON=0X00;      
+  24   1          TH1=0Xfd;           
+  25   1          TL1=0Xfd; //波特率9600
+  26   1          TR1= 1;                 
+  27   1          ES = 1;        
+  28   1          EA = 1;         
+  29   1      }
+  30          void T0_Start()//
+  31          {   
+  32   1          EA=1;
+  33   1          ET0=1;
+  34   1          TMOD=0X21;  
+  35   1          TH0=0xFE;
+  36   1          TL0=0x33;  
+  37   1          TR0=1;  
+  38   1      }
+  39          void T2_Start()//?????
+  40          {   
+  41   1          EA=1;
+  42   1          ET2=1;
+  43   1          RCAP2H=0x00;
+  44   1          RCAP2L=0x00;
+  45   1          TH2=RCAP2H;
+  46   1          TL2=RCAP2L;   
+  47   1          TR2=0;  
+  48   1      }
+  49           void stop1()
+  50          {   
+  51   1          PWMA=0;
+  52   1          PWMB=0;
+  53   1          LF=0;
+  54   1          LB=0;
+C51 COMPILER V9.54   CAR0                                                                  07/15/2023 16:07:18 PAGE 2   
+
+  55   1          RF=0;
+  56   1          RB=0;
+  57   1      }
+  58           
+  59          void forward1()
+  60          {
+  61   1          PWMA=15;
+  62   1          PWMB=15;
+  63   1          LF=1;
+  64   1          LB=0;
+  65   1          RF=1;
+  66   1          RB=0;     
+  67   1      }
+  68           
+  69          void back1()
+  70          {
+  71   1          PWMA=15;
+  72   1          PWMB=15;
+  73   1          LF=0;
+  74   1          LB=1;
+  75   1          RF=0;
+  76   1          RB=1;   
+  77   1      }
+  78           
+  79          void left1()
+  80          {
+  81   1          PWMA=15;
+  82   1          PWMB=15;
+  83   1          LF=0;  
+  84   1          LB=1;
+  85   1          RF=1;
+  86   1          RB=0;
+  87   1      }
+  88           
+  89          void right1()
+  90          {
+  91   1          PWMA=15;
+  92   1          PWMB=15;
+  93   1          LF=1;
+  94   1          LB=0;
+  95   1          RF=0;
+  96   1          RB=1;
+  97   1           
+  98   1      }
+  99           void stop2()
+ 100          {   
+ 101   1          PWMA=0;
+ 102   1          PWMB=0;
+ 103   1          LF=0;
+ 104   1          LB=0;
+ 105   1          RF=0;
+ 106   1          RB=0;
+ 107   1      }
+ 108           
+ 109          void forward2()
+ 110          {
+ 111   1          PWMA=40;
+ 112   1          PWMB=40;
+ 113   1          LF=1;
+ 114   1          LB=0;
+ 115   1          RF=1;
+ 116   1          RB=0;     
+C51 COMPILER V9.54   CAR0                                                                  07/15/2023 16:07:18 PAGE 3   
+
+ 117   1      }
+ 118           
+ 119          void back2()
+ 120          {
+ 121   1          PWMA=40;
+ 122   1          PWMB=40;
+ 123   1          LF=0;
+ 124   1          LB=1;
+ 125   1          RF=0;
+ 126   1          RB=1;   
+ 127   1      }
+ 128           
+ 129          void left2()
+ 130          {
+ 131   1          PWMA=40;
+ 132   1          PWMB=40;
+ 133   1          LF=0;
+ 134   1          LB=1;
+ 135   1          RF=1;
+ 136   1          RB=0;
+ 137   1      }
+ 138           
+ 139          void right2()
+ 140          {
+ 141   1          PWMA=40;
+ 142   1          PWMB=40;
+ 143   1          LF=1;
+ 144   1          LB=0;
+ 145   1          RF=0;
+ 146   1          RB=1;
+ 147   1           
+ 148   1      }
+ 149          void delay_10us(int ten_us)
+ 150          {
+ 151   1        while(ten_us--);  
+ 152   1      }
+ 153          void delay_ms(int ms)
+ 154          {
+ 155   1        int i,j;
+ 156   1        for(i=ms;i>0;i--)
+ 157   1          for(j=110;j>0;j--);
+ 158   1      }
+ 159          void ultrasonicwave_init(void){
+ 160   1        TRIG=0;
+ 161   1        ECHO=1;
+ 162   1        T2_Start();
+ 163   1      }
+ 164          float ultrasonicwave_measure(void){
+ 165   1        float ftemp;
+ 166   1          TRIG=1;
+ 167   1          delay_10us(2);
+ 168   1          TRIG=0;
+ 169   1          while(ECHO==0){;}
+ 170   1          TR2=1;
+ 171   1          while(ECHO==1){;}
+ 172   1          TR2=0;    
+ 173   1          ftemp=TH2*256+TL2;  
+ 174   1          TH2=0X00;
+ 175   1          TL2=0X00;
+ 176   1          delay_ms(30);
+ 177   1        return(float)(ftemp*0.00034/2)*1000;
+ 178   1      }
+C51 COMPILER V9.54   CAR0                                                                  07/15/2023 16:07:18 PAGE 4   
+
+ 179          void main()
+ 180          {
+ 181   1          T0_Start();
+ 182   1          jiaodu=3;
+ 183   1          UsartConfiguration(); 
+ 184   1          ultrasonicwave_init();  
+ 185   1          while(1){
+ 186   2          value=ultrasonicwave_measure()/10;
+ 187   2          if(flag==5){
+ 188   3          if(jiaodu==3 && value > 35){ 
+ 189   4            forward1();
+ 190   4            value=ultrasonicwave_measure()/10;
+ 191   4          }
+ 192   3          else if(jiaodu==3 && value<=35){
+ 193   4            stop1();
+ 194   4            jiaodu=2;
+ 195   4            delay_ms(200);
+ 196   4            value=ultrasonicwave_measure()/10;    
+ 197   4          }
+ 198   3          if(jiaodu == 2 && value >35){
+ 199   4            jiaodu =3;
+ 200   4            delay_ms(200);
+ 201   4            left1();
+ 202   4            delay_ms(500);
+ 203   4            stop1();
+ 204   4            value=ultrasonicwave_measure()/10;
+ 205   4          }
+ 206   3          else if(jiaodu == 2 && value <= 35)
+ 207   3          {
+ 208   4            jiaodu = 4;
+ 209   4            delay_ms(200);
+ 210   4            value=ultrasonicwave_measure()/10;
+ 211   4          }
+ 212   3          if(jiaodu == 4 && value >35)
+ 213   3          {
+ 214   4            jiaodu =3;
+ 215   4            delay_ms(200);
+ 216   4            right1();
+ 217   4            delay_ms(500);
+ 218   4            stop1();
+ 219   4            value=ultrasonicwave_measure()/10;
+ 220   4          }
+ 221   3            else if(jiaodu == 4 && value <=35)
+ 222   3          {
+ 223   4            jiaodu =3;
+ 224   4            delay_ms(200);
+ 225   4            back1();
+ 226   4            delay_ms(500);
+ 227   4            right1();
+ 228   4            delay_ms(500);
+ 229   4            stop1();
+ 230   4            value=ultrasonicwave_measure()/10;
+ 231   4          }
+ 232   3        }
+ 233   2            else if(flag<=4){
+ 234   3              switch(flag)
+ 235   3              {
+ 236   4                  case (1):  
+ 237   4                      forward2();break;
+ 238   4                  case (2):
+ 239   4                      back2();break;
+ 240   4                  case (3):
+C51 COMPILER V9.54   CAR0                                                                  07/15/2023 16:07:18 PAGE 5   
+
+ 241   4                      left2();break;
+ 242   4                  case (4):
+ 243   4                      right2();break;
+ 244   4                  case (0):
+ 245   4                      stop2();break;
+ 246   4                        
+ 247   4              }     
+ 248   3      
+ 249   3            }   
+ 250   2          
+ 251   2          } 
+ 252   1      }      
+ 253          void Tmr0_isr() interrupt 1 //T1中断用来扫描数码管和计500ms测距
+ 254          {  
+ 255   1        //TF2=0;       //软件清零
+ 256   1        TH0=0xFE;             //500us中断
+ 257   1        TL0=0x33;
+ 258   1        counter++;//中断次数，即：多少个0.5ms
+ 259   1        if(counter <= jiaodu) DJ = 1;//高电平占空比由变量jiaodu控制，jiaodu=1时高电平0.5ms,jiaodu=5时高电平2.5ms
+ 260   1        if(counter > jiaodu && counter <= 40) DJ = 0;//低电平占空比，jiaodu=1时低电平19.5ms，jiaodu=5时低电平17.5
+             -ms
+ 261   1        if(counter <= PWMA) ENA = 1;
+ 262   1        if(counter > PWMA && counter <= 40) ENA = 0;
+ 263   1        if(counter <= PWMB) ENB = 1;
+ 264   1        if(counter > PWMB && counter <= 40) ENB = 0;
+ 265   1        if(counter > 40) counter = 0;//脉宽20ms
+ 266   1      }  
+ 267          void Com_Int(void) interrupt 4
+ 268          {
+ 269   1          uchar receive_data; 
+ 270   1          EA = 0;
+ 271   1          if(RI == 1) 
+ 272   1          { 
+ 273   2              RI=0; 
+ 274   2              LF=0;
+ 275   2              RF=0;
+ 276   2              LB=0;
+ 277   2              RB=0;
+ 278   2              receive_data = SBUF;
+ 279   2              switch(receive_data)
+ 280   2              {
+ 281   3                  case ('1'):  
+ 282   3                      flag=1;break;
+ 283   3                  case ('2'):
+ 284   3                      flag=2;break;
+ 285   3                  case ('3'):
+ 286   3                      flag=3;break;
+ 287   3                  case ('4'):
+ 288   3                      flag=4;break;
+ 289   3                  case ('0'):
+ 290   3                      flag=0;break;
+ 291   3                  case ('5'):
+ 292   3                      flag=5;break;
+ 293   3                        
+ 294   3              }           
+ 295   2          }       
+ 296   1              EA = 1;
+ 297   1      }
+ 298              
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V9.54   CAR0                                                                  07/15/2023 16:07:18 PAGE 6   
+
+   CODE SIZE        =    946    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      7       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
